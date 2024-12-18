@@ -154,6 +154,7 @@ class BeamSearch:
         if prm_past_key_values is None: # First reasoning step
             num_pad_prev_step = torch.zeros(input_ids.shape[0], dtype=torch.long, device=input_ids.device) 
             seq_len_prev = 0
+            cache_position = None
             prm_past_key_values = None
         
         else: # Subsequent reasoning steps
@@ -162,6 +163,7 @@ class BeamSearch:
                 dim=1
             ) 
             seq_len_prev = prm_past_key_values[0][0].size(2)
+            cache_position = torch.arange(seq_len_prev, input_ids.size(1), device=input_ids.device)
 
             realigned_past_key_values = []
             for layer in prm_past_key_values:
@@ -191,16 +193,10 @@ class BeamSearch:
         mask &= response_mask
         input_ids[mask] = self.prm_step_id
         
-        
-        if prm_past_key_values is not None:
-            seq_len_prev = prm_past_key_values[0][0].size(2)
-            
-        if prm_past_key_values is not None:
-            seq_len_prev = prm_past_key_values[0][0].size(2)
         prm_inputs = self.prm.prepare_inputs_for_generation(
             input_ids=input_ids,
             past_key_values=prm_past_key_values,
-            cache_position=torch.arange(seq_len_prev, input_ids.size(1), device=input_ids.device),
+            cache_position=cache_position,
             use_cache=True,
         )
         return prm_inputs
