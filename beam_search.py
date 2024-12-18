@@ -268,6 +268,7 @@ class BeamSearch:
             
             # filter M best beams for both reasoning paths, kv cache for generator
             gen_input_ids = gen_output_ids[best_idxs[:self.width]]
+            gen_prev_sequence_pad_ids = gen_prev_sequence_pad_ids[best_idxs[:self.width]]
             gen_past_key_values = filter_kv_cache(gen_past_key_values, best_idxs[:self.width])
             prm_past_key_values = filter_kv_cache(prm_past_key_values, best_idxs[:self.width])
 
@@ -278,6 +279,7 @@ class BeamSearch:
             # (Note: num_return_sequences=N/M without separately inflating input could be an option, but I'm not sure if it works correctly with kv cache)
             inflator = int(self.number_of_beams/self.width)
             gen_input_ids = gen_input_ids.repeat(inflator, 1)
+            gen_prev_sequence_pad_ids = gen_prev_sequence_pad_ids.repeat(inflator, 1)
             gen_past_key_values = inflate_kv_cache(gen_past_key_values, inflator)
             prm_past_key_values = inflate_kv_cache(prm_past_key_values, inflator)
 
